@@ -59,6 +59,9 @@ int send__publish(struct mosquitto *mosq, uint16_t mid, const char *topic, uint3
 #else
 	if(mosq->sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 #endif
+#ifdef WITH_QUIC
+	// WITH_QUIC
+#endif
 
 	if(!mosq->retain_available){
 		retain = false;

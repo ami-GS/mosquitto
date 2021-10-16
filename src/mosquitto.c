@@ -50,6 +50,9 @@ Contributors:
 #ifdef WITH_WEBSOCKETS
 #  include <libwebsockets.h>
 #endif
+#ifdef WITH_QUIC
+#  include </usr/local/msquic/include/msquic.h>
+#endif
 
 #include "mosquitto_broker_internal.h"
 #include "memory_mosq.h"
@@ -230,6 +233,12 @@ static int listeners__start_single_mqtt(struct mosquitto__listener *listener)
 	return MOSQ_ERR_SUCCESS;
 }
 
+#ifdef WITH_QUIC
+void listeners__add_quic()
+{
+
+}
+#endif
 
 #ifdef WITH_WEBSOCKETS
 void listeners__add_websockets(struct lws_context *ws_context, mosq_sock_t fd)
@@ -363,6 +372,15 @@ static int listeners__start(void)
 				return 1;
 			}
 #endif
+		//}else if (db.config->listeners[i].protocol == mp_quic){
+#ifdef WITH_QUIC
+			mosq_quic_init(&db.config->listeners[i], db.config);
+			// qc_context
+			// if(!db.config->listeners[i].qc_context){
+			// 	log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to create quic listener on port %d.", db.config->listeners[i].port);
+			// 	return 1;
+			// }
+#endif
 		}
 	}
 	if(listensock == NULL){
@@ -383,6 +401,8 @@ static void listeners__stop(void)
 			lws_context_destroy(db.config->listeners[i].ws_context);
 		}
 		mosquitto__free(db.config->listeners[i].ws_protocol);
+#endif
+#ifdef WITH_QUIC
 #endif
 #ifdef WITH_UNIX_SOCKETS
 		if(db.config->listeners[i].unix_socket_path != NULL){
@@ -579,7 +599,7 @@ int main(int argc, char *argv[])
 	listeners__stop();
 
 	HASH_ITER(hh_id, db.contexts_by_id, ctxt, ctxt_tmp){
-#ifdef WITH_WEBSOCKETS
+#ifdef WITH_WEBSOCKETS || WITH_QUIC
 		if(!ctxt->wsi)
 #endif
 		{

@@ -27,6 +27,9 @@ Contributors:
 #  ifdef WITH_WEBSOCKETS
 #    include <libwebsockets.h>
 #  endif
+#  ifdef WITH_QUIC
+#    include <libmsquic.h>
+#  endif
 #else
 #  include "read_handle.h"
 #endif
@@ -172,6 +175,9 @@ int packet__queue(struct mosquitto *mosq, struct mosquitto__packet *packet)
 	return packet__write(mosq);
 #  endif
 #else
+#ifdef WITH_QUIC
+	// write by quic?
+#endif
 
 	/* Write a single byte to sockpairW (connected to sockpairR) to break out
 	 * of select() if in threaded mode. */

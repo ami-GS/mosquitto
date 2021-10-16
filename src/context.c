@@ -254,6 +254,8 @@ void context__free_disused(void)
 #ifdef WITH_WEBSOCKETS
 	struct mosquitto *last = NULL;
 #endif
+#ifdef WITH_QUIC
+#endif
 
 	context = db.ll_for_free;
 	db.ll_for_free = NULL;
@@ -271,6 +273,11 @@ void context__free_disused(void)
 			last = context;
 			context = next;
 		}else
+#endif
+#ifdef WITH_QUIC
+	    if(true) {
+
+		}
 #endif
 		{
 			next = context->for_free_next;

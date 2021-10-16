@@ -93,6 +93,10 @@ int mosquitto_client_protocol(const struct mosquitto *client)
 	if(client && client->wsi){
 		return mp_websockets;
 	}else
+#elif WITH_QUIC // else? elif?
+	if(client && true) {
+		return mp_quic;
+	}else
 #else
 	UNUSED(client);
 #endif

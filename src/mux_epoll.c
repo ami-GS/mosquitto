@@ -51,6 +51,9 @@ Contributors:
 #ifdef WITH_WEBSOCKETS
 #  include <libwebsockets.h>
 #endif
+#ifdef WITH_QUIC
+#  include <libmsquic.h>
+#endif
 
 #include "mosquitto_broker_internal.h"
 #include "memory_mosq.h"
@@ -219,6 +222,11 @@ int mux_epoll__handle(void)
 				/* Nothing needs to happen here, because we always call lws_service in the loop.
 				 * The important point is we've been woken up for this listener. */
 #endif
+#ifdef WITH_QUIC
+			}else if(context->ident == id_listener_quic){
+				/* Nothing needs to happen here, because we always call lws_service in the loop.
+				 * The important point is we've been woken up for this listener. */
+#endif
 			}
 		}
 	}
@@ -252,6 +260,11 @@ static void loop_handle_reads_writes(struct mosquitto *context, uint32_t events)
 		wspoll.revents = (int16_t)events;
 		lws_service_fd(lws_get_context(context->wsi), &wspoll);
 		return;
+	}
+#endif
+#ifdef WITH_QUIC
+	//if(context->quici){
+	if(true){
 	}
 #endif
 

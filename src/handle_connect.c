@@ -37,7 +37,7 @@ Contributors:
 #ifdef WITH_WEBSOCKETS
 #  include <libwebsockets.h>
 #endif
-
+//?
 
 static char nibble_to_hex(uint8_t value)
 {

@@ -303,6 +303,9 @@ struct mosquitto {
 #  ifdef WITH_WEBSOCKETS
 	struct lws *wsi;
 #  endif
+#  ifdef WITH_QUIC
+	struct lqc *qci;
+#  endif
 	bool ws_want_write;
 	bool assigned_id;
 #else

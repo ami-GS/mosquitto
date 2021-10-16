@@ -30,6 +30,10 @@ Contributors:
 #  endif
 #endif
 
+#ifdef WITH_QUIC
+#  include </usr/local/msquic/include/msquic.h>
+#endif
+
 #include "mosquitto_internal.h"
 #include "mosquitto_broker.h"
 #include "mosquitto_plugin.h"
@@ -54,6 +58,7 @@ Contributors:
 #define MQTT3_LOG_ALL 0xFF
 
 #define WEBSOCKET_CLIENT -2
+#define QUIC_CLIENT -3
 
 #define CMD_PORT_LIMIT 10
 #define TOPIC_HIERARCHY_LIMIT 200
@@ -191,6 +196,7 @@ enum struct_ident{
 	id_listener = 1,
 	id_client = 2,
 	id_listener_ws = 3,
+	id_listener_quic = 4,
 };
 #endif
 
@@ -232,6 +238,16 @@ struct mosquitto__listener {
 	bool ws_in_init;
 	char *http_dir;
 	struct lws_protocols *ws_protocol;
+#endif
+#ifdef WITH_QUIC
+	char *test_quic_conf;
+	HQUIC Registration;
+	HQUIC Configuration;
+	//const QUIC_API_TABLE* MsQuic;
+	/*
+struct quic_context *quic_context;
+//...
+	*/
 #endif
 	struct mosquitto__security_options security_options;
 #ifdef WITH_UNIX_SOCKETS
@@ -298,6 +314,10 @@ struct mosquitto__config {
 #ifdef WITH_WEBSOCKETS
 	int websockets_log_level;
 	uint16_t websockets_headers_size;
+#endif
+#ifdef WITH_QUIC
+	int quic_log_level;
+	uint16_t quic_headers_size; //??
 #endif
 #ifdef WITH_BRIDGE
 	struct mosquitto__bridge *bridges;
@@ -756,7 +776,9 @@ void listeners__reload_all_certificates(void);
 #ifdef WITH_WEBSOCKETS
 void listeners__add_websockets(struct lws_context *ws_context, mosq_sock_t fd);
 #endif
-
+#ifdef WITH_QUIC
+void listeners__add_quic();
+#endif
 /* ============================================================
  * Plugin related functions
  * ============================================================ */
@@ -849,6 +871,9 @@ DWORD WINAPI SigThreadProc(void* data);
  * ============================================================ */
 #ifdef WITH_WEBSOCKETS
 void mosq_websockets_init(struct mosquitto__listener *listener, const struct mosquitto__config *conf);
+#endif
+#ifdef WITH_QUIC
+void mosq_quic_init(struct mosquitto__listener *listener, const struct mosquitto__config *conf);
 #endif
 void do_disconnect(struct mosquitto *context, int reason);
 
