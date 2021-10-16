@@ -97,6 +97,7 @@ OBJS=	mosquitto.o \
 		util_mosq.o \
 		util_topic.o \
 		websockets.o \
+		quic.o \
 		will_delay.o \
 		will_mosq.o \
 		xtreport.o
@@ -388,6 +389,9 @@ utf8_mosq.o : ../lib/utf8_mosq.c
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
 websockets.o : websockets.c mosquitto_broker_internal.h
+	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
+
+quic.o : quic.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
 will_delay.o : will_delay.c mosquitto_broker_internal.h

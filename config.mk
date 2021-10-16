@@ -74,6 +74,8 @@ WITH_SRV:=no
 # Set to no to disable
 WITH_WEBSOCKETS:=no
 
+WITH_QUIC:=yes
+
 # Use elliptic keys in broker
 WITH_EC:=yes
 
@@ -366,6 +368,16 @@ endif
 ifeq ($(WITH_WEBSOCKETS),static)
 	BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_WEBSOCKET=WS_IS_LWS
 	BROKER_LDADD:=$(BROKER_LDADD) -static -lwebsockets
+endif
+
+ifeq ($(WITH_QUIC),yes)
+	BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_QUIC
+	BROKER_LDADD:=$(BROKER_LDADD) -lmsquic
+endif
+
+ifeq ($(WITH_WEBSOCKETS),static)
+	BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_QUIC
+	BROKER_LDADD:=$(BROKER_LDADD) -static -lmsquic
 endif
 
 INSTALL?=install

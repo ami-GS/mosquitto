@@ -50,6 +50,9 @@ Contributors:
 #ifdef WITH_WEBSOCKETS
 #  include <libwebsockets.h>
 #endif
+#ifdef WITH_QUIC
+#  include </usr/local/msquic/include/msquic.h>
+#endif
 
 #include "mosquitto_broker_internal.h"
 #include "memory_mosq.h"
