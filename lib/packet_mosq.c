@@ -28,7 +28,7 @@ Contributors:
 #    include <libwebsockets.h>
 #  endif
 #  ifdef WITH_QUIC
-#    include <libmsquic.h>
+#    include </usr/local/msquic/include/msquic.h>
 #  endif
 #else
 #  include "read_handle.h"
@@ -179,20 +179,26 @@ int packet__queue(struct mosquitto *mosq, struct mosquitto__packet *packet)
 	// write by quic?
 #endif
 
+#ifndef WITH_QUIC
 	/* Write a single byte to sockpairW (connected to sockpairR) to break out
 	 * of select() if in threaded mode. */
 	if(mosq->sockpairW != INVALID_SOCKET){
-#ifndef WIN32
+#  ifndef WIN32
+		fprintf(stderr, "11-1 write aaaa\n");
 		if(write(mosq->sockpairW, &sockpair_data, 1)){
 		}
-#else
+#  else
+		fprintf(stderr, "11-1 send\n");
 		send(mosq->sockpairW, &sockpair_data, 1, 0);
-#endif
+#  endif
 	}
-
+#endif
+	fprintf(stderr, "11-2\n");
 	if(mosq->in_callback == false && mosq->threaded == mosq_ts_none){
+		fprintf(stderr, "packet__write\n");
 		return packet__write(mosq);
 	}else{
+		fprintf(stderr, "packet__queue failed\n");
 		return MOSQ_ERR_SUCCESS;
 	}
 #endif
@@ -222,6 +228,7 @@ int packet__write(struct mosquitto *mosq)
 
 	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
+	fprintf(stderr, "packet__write in\n");
 
 	pthread_mutex_lock(&mosq->current_out_packet_mutex);
 	pthread_mutex_lock(&mosq->out_packet_mutex);
@@ -251,12 +258,15 @@ int packet__write(struct mosquitto *mosq)
 		return MOSQ_ERR_SUCCESS;
 	}
 
+	fprintf(stderr, "packet__write outer loop while(mosq->current_out_packet[%d])\n", mosq->current_out_packet);
 	while(mosq->current_out_packet){
 		packet = mosq->current_out_packet;
-
+		fprintf(stderr, "packet__write inner loop to_process %d bytes\n", packet->to_process);
 		while(packet->to_process > 0){
+			//fprintf(stderr, "bef net__write\n");
 			write_length = net__write(mosq, &(packet->payload[packet->pos]), packet->to_process);
 			if(write_length > 0){
+				fprintf(stderr, "sent %d bytes\n", write_length);
 				G_BYTES_SENT_INC(write_length);
 				packet->to_process -= (uint32_t)write_length;
 				packet->pos += (uint32_t)write_length;
@@ -287,6 +297,7 @@ int packet__write(struct mosquitto *mosq)
 
 		G_MSGS_SENT_INC(1);
 		if(((packet->command)&0xF6) == CMD_PUBLISH){
+			fprintf(stderr, "CMD_PUBLISH 0xF6\n");
 			G_PUB_MSGS_SENT_INC(1);
 #ifndef WITH_BROKER
 			pthread_mutex_lock(&mosq->callback_mutex);
@@ -304,12 +315,14 @@ int packet__write(struct mosquitto *mosq)
 			}
 			pthread_mutex_unlock(&mosq->callback_mutex);
 		}else if(((packet->command)&0xF0) == CMD_DISCONNECT){
+			fprintf(stderr, "CMD_DISCONNECT\n");
 			do_client_disconnect(mosq, MOSQ_ERR_SUCCESS, NULL);
 			packet__cleanup(packet);
 			mosquitto__free(packet);
 			return MOSQ_ERR_SUCCESS;
 #endif
 		}else if(((packet->command)&0xF0) == CMD_PUBLISH){
+			fprintf(stderr, "CMD_PUBLISH 0xF0\n");
 			G_PUB_MSGS_SENT_INC(1);
 		}
 
@@ -348,6 +361,7 @@ int packet__write(struct mosquitto *mosq)
 
 int packet__read(struct mosquitto *mosq)
 {
+	fprintf(stderr, "packet__read\n");
 	uint8_t byte;
 	ssize_t read_length;
 	int rc = 0;
@@ -380,6 +394,7 @@ int packet__read(struct mosquitto *mosq)
 	 * Finally, free the memory and reset everything to starting conditions.
 	 */
 	if(!mosq->in_packet.command){
+		fprintf(stderr, "packet__read read command\n");
 		read_length = net__read(mosq, &byte, 1);
 		if(read_length == 1){
 			mosq->in_packet.command = byte;
@@ -556,6 +571,7 @@ int packet__read(struct mosquitto *mosq)
 		G_PUB_MSGS_RECEIVED_INC(1);
 	}
 #endif
+	fprintf(stderr, "packet__read -> handle__packet\n");
 	rc = handle__packet(mosq);
 
 	/* Free data and reset values */

@@ -52,6 +52,7 @@ Contributors:
 #endif
 #ifdef WITH_QUIC
 #  include </usr/local/msquic/include/msquic.h>
+#  include "quic.h"
 #endif
 
 #include "mosquitto_broker_internal.h"
@@ -289,11 +290,22 @@ static int listeners__add_local(const char *host, uint16_t port)
 	if(listeners[db.config->listener_count].host == NULL){
 		return MOSQ_ERR_NOMEM;
 	}
+	log__printf(NULL, MOSQ_LOG_WARNING, "bef init");
+	// TODO: need to check [].protocol == mp_quic
+#ifdef WITH_QUIC
+	log__printf(NULL, MOSQ_LOG_WARNING, "bef quic init");
+	if(mosq_quic_init(&listeners[db.config->listener_count], db.config)){
+		log__printf(NULL, MOSQ_LOG_WARNING, "quic init fail");
+#else
+	log__printf(NULL, MOSQ_LOG_WARNING, "bef mqtt init");
 	if(listeners__start_single_mqtt(&listeners[db.config->listener_count])){
+#endif
+		log__printf(NULL, MOSQ_LOG_WARNING, "listeners__start_single_mqtt fail");
 		mosquitto__free(listeners[db.config->listener_count].host);
 		listeners[db.config->listener_count].host = NULL;
 		return MOSQ_ERR_UNKNOWN;
 	}
+
 	db.config->listener_count++;
 	return MOSQ_ERR_SUCCESS;
 }
@@ -317,6 +329,7 @@ static int listeners__start_local_only(void)
 	log__printf(NULL, MOSQ_LOG_WARNING, "Create a configuration file which defines a listener to allow remote access.");
 	log__printf(NULL, MOSQ_LOG_WARNING, "For more details see https://mosquitto.org/documentation/authentication-methods/");
 	if(db.config->cmd_port_count == 0){
+		log__printf(NULL, MOSQ_LOG_WARNING, "add_local twice");
 		rc = listeners__add_local("127.0.0.1", 1883);
 		if(rc == MOSQ_ERR_NOMEM) return MOSQ_ERR_NOMEM;
 		rc = listeners__add_local("::1", 1883);
@@ -350,8 +363,10 @@ static int listeners__start(void)
 			if(db.config->pid_file){
 				(void)remove(db.config->pid_file);
 			}
+			log__printf(NULL, MOSQ_LOG_WARNING, "Failure");
 			return 1;
 		}
+		log__printf(NULL, MOSQ_LOG_WARNING, "Success");
 		return MOSQ_ERR_SUCCESS;
 	}
 
@@ -372,9 +387,9 @@ static int listeners__start(void)
 				return 1;
 			}
 #endif
-		//}else if (db.config->listeners[i].protocol == mp_quic){
+		}else if (db.config->listeners[i].protocol == mp_quic){
 #ifdef WITH_QUIC
-			mosq_quic_init(&db.config->listeners[i], db.config);
+			// mosq_quic_init(&db.config->listeners[i], db.config);
 			// qc_context
 			// if(!db.config->listeners[i].qc_context){
 			// 	log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to create quic listener on port %d.", db.config->listeners[i].port);

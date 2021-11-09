@@ -52,6 +52,10 @@ Contributors:
 #include <net/netbyte.h>
 #endif
 
+#ifdef WITH_QUIC
+#  include "quic.h"
+#endif
+
 #include "mosquitto_broker_internal.h"
 #include "mqtt_protocol.h"
 #include "memory_mosq.h"
@@ -679,8 +683,9 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 #ifdef WITH_QUIC
 static int net__socket_listen_quic(struct mosquitto__listener *listener)
 {
-
-
+	printf("in net__socket_listen_quic");
+	ClientConnect_listener(listener);
+	printf("out net__socket_listen_quic");
 	return 0;
 }
 #endif
@@ -881,14 +886,17 @@ int net__socket_listen(struct mosquitto__listener *listener)
 		rc = net__socket_listen_unix(listener);
 	}else
 #endif
+	printf(">>>>>>>>>>>>>>>>>>>>>");
 #ifdef WITH_QUIC
 	if(true) {
-
-	}else
-#endif
+		rc = net__socket_listen_quic(listener);
+	}//else
+#else
 	{
 		rc = net__socket_listen_tcp(listener);
 	}
+#endif
+	printf("<<<<<<<<<<<<<<<<<<<<");
 	if(rc) return rc;
 
 	/* We need to have at least one working socket. */

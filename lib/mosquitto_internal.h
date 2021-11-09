@@ -56,6 +56,11 @@ Contributors:
 #	include <stdint.h>
 #endif
 
+#ifdef WITH_QUIC
+#  include </usr/local/msquic/include/msquic.h>
+//#  include </usr/local/msquic/include/msquic_posix.h>
+#endif
+
 #include "mosquitto.h"
 #include "time_mosq.h"
 #ifdef WITH_BROKER
@@ -303,9 +308,6 @@ struct mosquitto {
 #  ifdef WITH_WEBSOCKETS
 	struct lws *wsi;
 #  endif
-#  ifdef WITH_QUIC
-	struct lqc *qci;
-#  endif
 	bool ws_want_write;
 	bool assigned_id;
 #else
@@ -348,6 +350,11 @@ struct mosquitto {
 	ares_channel achan;
 #  endif
 #endif
+#ifdef WITH_QUIC
+	//struct lqc *qci;
+	HQUIC Connection;
+#endif
+
 	uint8_t max_qos;
 	uint8_t retain_available;
 	bool tcp_nodelay;
