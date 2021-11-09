@@ -45,7 +45,8 @@ typedef struct mqtt5__property mosquitto_property;
 enum mosquitto_protocol {
 	mp_mqtt,
 	mp_mqttsn,
-	mp_websockets
+	mp_websockets,
+	mp_quic
 };
 
 /* =========================================================================
@@ -430,6 +431,7 @@ mosq_EXPORT void *mosquitto_client_certificate(const struct mosquitto *client);
  * mp_mqtt (MQTT over TCP)
  * mp_mqttsn (MQTT-SN)
  * mp_websockets (MQTT over Websockets)
+ * mp_quic (MQTT over QUIC)
  */
 mosq_EXPORT int mosquitto_client_protocol(const struct mosquitto *client);
 
