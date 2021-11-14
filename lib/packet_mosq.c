@@ -301,6 +301,7 @@ int packet__write(struct mosquitto *mosq)
 			do_client_disconnect(mosq, MOSQ_ERR_SUCCESS, NULL);
 			packet__cleanup(packet);
 			mosquitto__free(packet);
+			pthread_mutex_unlock(&mosq->current_out_packet_mutex);
 			return MOSQ_ERR_SUCCESS;
 #endif
 		}else if(((packet->command)&0xF0) == CMD_PUBLISH){
