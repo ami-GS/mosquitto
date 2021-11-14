@@ -44,7 +44,9 @@ MOSQ_OBJS=mosquitto.o \
 		  utf8_mosq.o \
 		  util_mosq.o \
 		  util_topic.o \
-		  will_mosq.o
+		  will_mosq.o \
+		  quic_common.o \
+		  quic_client.o
 
 ALL_DEPS:=
 
@@ -162,6 +164,12 @@ net_mosq_ocsp.o : net_mosq_ocsp.c net_mosq.h
 	${CROSS_COMPILE}$(CC) $(LIB_CPPFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 net_mosq.o : net_mosq.c net_mosq.h
+	${CROSS_COMPILE}$(CC) $(LIB_CPPFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
+quic_common.o : quic/common.c quic/common.h
+	${CROSS_COMPILE}$(CC) $(LIB_CPPFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
+quic_client.o : quic/client.c quic/client.h
 	${CROSS_COMPILE}$(CC) $(LIB_CPPFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 options.o : options.c ../include/mosquitto.h mosquitto_internal.h

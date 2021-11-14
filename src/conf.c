@@ -277,8 +277,6 @@ void config__cleanup(struct mosquitto__config *config)
 #ifdef WITH_TLS
 			mosquitto__free(config->listeners[i].cafile);
 			mosquitto__free(config->listeners[i].capath);
-			mosquitto__free(config->listeners[i].certfile);
-			mosquitto__free(config->listeners[i].keyfile);
 			mosquitto__free(config->listeners[i].ciphers);
 			mosquitto__free(config->listeners[i].ciphers_tls13);
 			mosquitto__free(config->listeners[i].psk_hint);
@@ -293,16 +291,14 @@ void config__cleanup(struct mosquitto__config *config)
 			{
 				SSL_CTX_free(config->listeners[i].ssl_ctx);
 			}
-#ifdef WITH_QUIC
-			if(true) // free quick ssl context?
-			{}
 #endif
+#ifdef WITH_TLS || WITH_QUIC
+			mosquitto__free(config->listeners[i].certfile);
+			mosquitto__free(config->listeners[i].keyfile);
 #endif
+
 #ifdef WITH_WEBSOCKETS
 			mosquitto__free(config->listeners[i].http_dir);
-#endif
-#ifdef WITH_QUIC
-			mosquitto__free(config->listeners[i].test_quic_conf);
 #endif
 #ifdef WITH_UNIX_SOCKETS
 			mosquitto__free(config->listeners[i].unix_socket_path);
@@ -432,8 +428,6 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 #ifdef WITH_TLS
 			|| config->default_listener.cafile
 			|| config->default_listener.capath
-			|| config->default_listener.certfile
-			|| config->default_listener.keyfile
 			|| config->default_listener.tls_engine
 			|| config->default_listener.tls_keyform != mosq_k_pem
 			|| config->default_listener.tls_engine_kpass_sha1
@@ -445,6 +439,10 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 			|| config->default_listener.crlfile
 			|| config->default_listener.use_identity_as_username
 			|| config->default_listener.use_subject_as_username
+#endif
+#ifdef WITH_TLS || WITH_QUIC
+			|| config->default_listener.certfile
+			|| config->default_listener.keyfile
 #endif
 			|| config->default_listener.use_username_as_clientid
 			|| config->default_listener.host
@@ -499,8 +497,6 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 		config->listeners[config->listener_count-1].tls_engine_kpass_sha1 = config->default_listener.tls_engine_kpass_sha1;
 		config->listeners[config->listener_count-1].cafile = config->default_listener.cafile;
 		config->listeners[config->listener_count-1].capath = config->default_listener.capath;
-		config->listeners[config->listener_count-1].certfile = config->default_listener.certfile;
-		config->listeners[config->listener_count-1].keyfile = config->default_listener.keyfile;
 		config->listeners[config->listener_count-1].ciphers = config->default_listener.ciphers;
 		config->listeners[config->listener_count-1].ciphers_tls13 = config->default_listener.ciphers_tls13;
 		config->listeners[config->listener_count-1].dhparamfile = config->default_listener.dhparamfile;
@@ -510,6 +506,10 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 		config->listeners[config->listener_count-1].crlfile = config->default_listener.crlfile;
 		config->listeners[config->listener_count-1].use_identity_as_username = config->default_listener.use_identity_as_username;
 		config->listeners[config->listener_count-1].use_subject_as_username = config->default_listener.use_subject_as_username;
+#endif
+#ifdef WITH_TLS || WITH_QUIC
+		config->listeners[config->listener_count-1].certfile = config->default_listener.certfile;
+		config->listeners[config->listener_count-1].keyfile = config->default_listener.keyfile;
 #endif
 		config->listeners[config->listener_count-1].security_options.acl_file = config->default_listener.security_options.acl_file;
 		config->listeners[config->listener_count-1].security_options.password_file = config->default_listener.security_options.password_file;
@@ -1181,7 +1181,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: TLS support not available.");
 #endif
 				}else if(!strcmp(token, "certfile")){
-#ifdef WITH_TLS
+#ifdef WITH_TLS || WITH_QUIC
 					if(reload) continue; /* Listeners not valid for reloading. */
 					if(cur_listener->psk_hint){
 						log__printf(NULL, MOSQ_LOG_ERR, "Error: Cannot use both certificate and psk encryption in a single listener.");
@@ -1392,7 +1392,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: Bridge support not available.");
 #endif
 				}else if(!strcmp(token, "keyfile")){
-#ifdef WITH_TLS
+#ifdef WITH_TLS || WITH_QUIC
 					if(reload) continue; /* Listeners not valid for reloading. */
 					if(conf__parse_string(&token, "keyfile", &cur_listener->keyfile, saveptr)) return MOSQ_ERR_INVAL;
 #else

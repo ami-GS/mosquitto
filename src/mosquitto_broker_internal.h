@@ -217,8 +217,6 @@ struct mosquitto__listener {
 #ifdef WITH_TLS
 	char *cafile;
 	char *capath;
-	char *certfile;
-	char *keyfile;
 	char *tls_engine;
 	char *tls_engine_kpass_sha1;
 	char *ciphers;
@@ -233,21 +231,20 @@ struct mosquitto__listener {
 	bool require_certificate;
 	enum mosquitto__keyform tls_keyform;
 #endif
-#ifdef WITH_WEBSOCKETS
-	struct lws_context *ws_context;
-	bool ws_in_init;
-	char *http_dir;
-	struct lws_protocols *ws_protocol;
+#ifdef WITH_TLS || WITH_QUIC
+	char *certfile;
+	char *keyfile;
 #endif
 #ifdef WITH_QUIC
 	char *test_quic_conf;
 	HQUIC Registration;
 	HQUIC Configuration;
-	//const QUIC_API_TABLE* MsQuic;
-	/*
-struct quic_context *quic_context;
-//...
-	*/
+#endif
+#ifdef WITH_WEBSOCKETS
+	struct lws_context *ws_context;
+	bool ws_in_init;
+	char *http_dir;
+	struct lws_protocols *ws_protocol;
 #endif
 	struct mosquitto__security_options security_options;
 #ifdef WITH_UNIX_SOCKETS

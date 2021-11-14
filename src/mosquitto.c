@@ -234,13 +234,6 @@ static int listeners__start_single_mqtt(struct mosquitto__listener *listener)
 	return MOSQ_ERR_SUCCESS;
 }
 
-#ifdef WITH_QUIC
-void listeners__add_quic()
-{
-
-}
-#endif
-
 #ifdef WITH_WEBSOCKETS
 void listeners__add_websockets(struct lws_context *ws_context, mosq_sock_t fd)
 {
@@ -282,6 +275,10 @@ static int listeners__add_local(const char *host, uint16_t port)
 {
 	struct mosquitto__listener *listeners;
 	listeners = db.config->listeners;
+#ifdef WITH_QUIC
+	listeners[db.config->listener_count].certfile = db.config->default_listener.certfile;
+	listeners[db.config->listener_count].keyfile = db.config->default_listener.keyfile;
+#endif
 
 	listener__set_defaults(&listeners[db.config->listener_count]);
 	listeners[db.config->listener_count].security_options.allow_anonymous = true;
@@ -290,16 +287,8 @@ static int listeners__add_local(const char *host, uint16_t port)
 	if(listeners[db.config->listener_count].host == NULL){
 		return MOSQ_ERR_NOMEM;
 	}
-	log__printf(NULL, MOSQ_LOG_WARNING, "bef init");
-	// TODO: need to check [].protocol == mp_quic
-#ifdef WITH_QUIC
-	log__printf(NULL, MOSQ_LOG_WARNING, "bef quic init");
-	if(mosq_quic_init(&listeners[db.config->listener_count], db.config)){
-		log__printf(NULL, MOSQ_LOG_WARNING, "quic init fail");
-#else
-	log__printf(NULL, MOSQ_LOG_WARNING, "bef mqtt init");
+	log__printf(NULL, MOSQ_LOG_WARNING, "listeners__add_local -> listeners__start_single_mqtt");
 	if(listeners__start_single_mqtt(&listeners[db.config->listener_count])){
-#endif
 		log__printf(NULL, MOSQ_LOG_WARNING, "listeners__start_single_mqtt fail");
 		mosquitto__free(listeners[db.config->listener_count].host);
 		listeners[db.config->listener_count].host = NULL;
